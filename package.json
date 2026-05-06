@@ -1,0 +1,17 @@
+{
+  "name": "memorybox-functions",
+  "version": "1.0.0",
+  "description": "MemoryBox Azure Functions backend",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start",
+    "test": "echo \"No tests configured\""
+  },
+  "dependencies": {
+    "@azure/functions": "^4.7.0",
+    "@azure/storage-blob": "^12.25.0",
+    "@azure/cosmos": "^4.3.0",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,8 @@
+node_modules/
+local.settings.json
+.env
+.DS_Store
+.vscode/
+dist/
+build/
+npm-debug.log*
