@@ -127,9 +127,10 @@ function setFile(file) {
   reader.onload = e => {
     previewImg.src = e.target.result;
     previewName.textContent = file.name;
-    dropIdle.hidden = true;
-    dropPreview.hidden = false;
+    dropIdle.style.display = "none";
+    dropPreview.classList.add("visible");
   };
+  reader.onerror = () => showToast("Could not read file.", "error");
   reader.readAsDataURL(file);
 }
 
@@ -138,8 +139,8 @@ function clearFile() {
   imageFileInput.value = "";
   previewImg.src = "";
   previewName.textContent = "";
-  dropIdle.hidden = false;
-  dropPreview.hidden = true;
+  dropIdle.style.display = "";
+  dropPreview.classList.remove("visible");
 }
 
 imageFileInput.addEventListener("change", e => {
@@ -336,8 +337,44 @@ function renderMemories(memories) {
   galleryNoRes.hidden = true;
 
   gallery.innerHTML = memories.map(m => {
-    const tags = (m.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("");
     const date = formatDate(m.uploadedAt);
+
+    // ── Tags: distinguish user tags vs AI tags ────────────
+    const userTags = (m.userTags || []);
+    const aiTags = (m.aiTags || []);
+
+    // If old memory (no userTags split), show all tags normally
+    const hasTagSplit = m.hasOwnProperty("userTags");
+    const allTagsHtml = hasTagSplit
+      ? [
+        ...userTags.map(t => `<span class="tag tag-user">${escapeHtml(t)}</span>`),
+        ...aiTags.map(t => `<span class="tag tag-ai" title="AI-generated tag">✦ ${escapeHtml(t)}</span>`)
+      ].join("")
+      : (m.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("");
+
+    // ── AI Caption block ──────────────────────────────────
+    const aiCaptionHtml = m.aiCaption
+      ? `<div class="ai-caption">
+           <span class="ai-caption-icon">✦</span>
+           <span class="ai-caption-text">${escapeHtml(m.aiCaption)}</span>
+         </div>`
+      : "";
+
+    // ── Dominant colour swatches ──────────────────────────
+    const colorSwatches = (m.dominantColors || []).length > 0
+      ? `<div class="color-swatches">
+           ${m.dominantColors.map(c =>
+        `<span class="color-swatch" style="background:${escapeHtml(c)}" title="${escapeHtml(c)}"></span>`
+      ).join("")}
+         </div>`
+      : "";
+
+    // ── AI badge (shown if analysis ran successfully) ─────
+    const aiBadge = m.analysisSuccess
+      ? `<span class="ai-badge" title="Analysed by Azure Computer Vision">AI</span>`
+      : `<button class="btn-analyse" data-action="analyse" data-id="${escapeHtml(m.memoryId)}" title="Run Azure Computer Vision analysis">
+           ✦ Analyse
+         </button>`;
 
     return `
       <article class="memory-card" role="listitem" data-id="${escapeHtml(m.memoryId)}">
@@ -346,18 +383,17 @@ function renderMemories(memories) {
           <div class="card-img-overlay">
             <span class="card-date-overlay">${date}</span>
           </div>
+          <div class="card-ai-badge-wrap">${aiBadge}</div>
         </div>
         <div class="card-body">
           <h3 class="card-title" title="${escapeHtml(m.title)}">${escapeHtml(m.title)}</h3>
+          ${aiCaptionHtml}
           <p class="card-desc">${escapeHtml(m.description)}</p>
-          ${tags ? `<div class="card-tags">${tags}</div>` : ""}
+          ${allTagsHtml ? `<div class="card-tags">${allTagsHtml}</div>` : ""}
+          ${colorSwatches}
           <div class="card-actions">
-            <button class="btn btn-ghost" data-action="edit" data-id="${escapeHtml(m.memoryId)}">
-              Edit
-            </button>
-            <button class="btn btn-danger" data-action="delete" data-id="${escapeHtml(m.memoryId)}">
-              Delete
-            </button>
+            <button class="btn btn-ghost" data-action="edit" data-id="${escapeHtml(m.memoryId)}">Edit</button>
+            <button class="btn btn-danger" data-action="delete" data-id="${escapeHtml(m.memoryId)}">Delete</button>
           </div>
         </div>
       </article>
@@ -381,6 +417,7 @@ gallery.addEventListener("click", e => {
   const id = btn.dataset.id;
   if (btn.dataset.action === "edit") openEditModal(id);
   if (btn.dataset.action === "delete") openDeleteModal(id);
+  if (btn.dataset.action === "analyse") analyseMemory(id, btn);
 });
 
 /* ════════════════════════════════════════════════════════════
@@ -549,6 +586,47 @@ refreshButton.addEventListener("click", async () => {
     svg.style.transform = "rotate(0deg)";
   }, 650);
 });
+
+/* ════════════════════════════════════════════════════════════
+   AZURE COMPUTER VISION — ANALYSE MEMORY
+   ════════════════════════════════════════════════════════════ */
+async function analyseMemory(memoryId, btn) {
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="border-top-color:var(--accent)"></span> Analysing…`;
+  btn.style.pointerEvents = "none";
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/memories/${memoryId}/analyse`, {
+      method: "POST"
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Analysis failed.");
+    }
+
+    const { analysis } = result;
+    const tagList = analysis.aiTags.length > 0
+      ? analysis.aiTags.join(", ")
+      : "no tags generated";
+
+    showToast(
+      `✦ AI Analysis complete — "${analysis.aiCaption || "caption unavailable"}" · Tags: ${tagList}`,
+      "success",
+      5000
+    );
+
+    await loadMemories();
+
+  } catch (error) {
+    showToast(error.message, "error");
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    btn.style.pointerEvents = "";
+  }
+}
 
 /* ════════════════════════════════════════════════════════════
    FORM SUBMIT

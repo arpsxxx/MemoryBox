@@ -7,9 +7,7 @@
   <title>MemoryBox — Your Cloud Memory Journal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -72,19 +70,11 @@
       </div>
       <nav class="header-nav">
         <button class="nav-btn active" data-view="gallery" aria-label="Gallery view">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Gallery
         </button>
         <button class="nav-btn" data-view="upload" aria-label="Upload view">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 16V4m0 0L8 8m4-4 4 4" />
-            <path d="M20 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M20 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"/></svg>
           Upload
         </button>
         <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">
@@ -114,16 +104,16 @@
         <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Drop image here or click to select">
           <div class="drop-zone-idle" id="dropIdle">
             <svg class="drop-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.2">
-              <rect x="8" y="8" width="48" height="48" rx="8" />
-              <path d="M32 40V24m0 0-8 8m8-8 8 8" />
-              <path d="M20 44h24" />
+              <rect x="8" y="8" width="48" height="48" rx="8"/>
+              <path d="M32 40V24m0 0-8 8m8-8 8 8"/>
+              <path d="M20 44h24"/>
             </svg>
             <p class="drop-label">Drag &amp; drop an image here</p>
             <p class="drop-hint">or <span class="drop-browse">browse files</span></p>
             <p class="drop-formats">JPG, PNG, WEBP, GIF · max 10 MB</p>
           </div>
-          <div class="drop-zone-preview" id="dropPreview" hidden>
-            <img id="previewImg" src="" alt="Preview" class="preview-img" />
+          <div class="drop-zone-preview" id="dropPreview">
+            <img id="previewImg" alt="Selected image preview" class="preview-img" />
             <button type="button" class="preview-remove" id="previewRemove" aria-label="Remove image">&#10005;</button>
             <p class="preview-name" id="previewName"></p>
           </div>
@@ -143,8 +133,7 @@
 
         <label class="field-label">
           Description <span class="required">*</span>
-          <textarea id="description" class="field-input field-textarea" rows="3"
-            placeholder="Tell the story behind this memory…" required></textarea>
+          <textarea id="description" class="field-input field-textarea" rows="3" placeholder="Tell the story behind this memory…" required></textarea>
         </label>
 
         <div class="form-footer">
@@ -169,19 +158,12 @@
         </div>
         <div class="toolbar-right">
           <div class="search-wrap">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m21 21-4-4" />
-            </svg>
-            <input type="text" id="searchInput" class="search-input" placeholder="Search memories…"
-              aria-label="Search memories" />
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search memories…" aria-label="Search memories" />
             <button class="search-clear" id="searchClear" aria-label="Clear search" hidden>&#10005;</button>
           </div>
           <button class="btn btn-ghost btn-icon" id="refreshButton" aria-label="Refresh gallery">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m-15.357-2A8.001 8.001 0 0 0 19.419 15m0 0H15" />
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m-15.357-2A8.001 8.001 0 0 0 19.419 15m0 0H15"/></svg>
           </button>
         </div>
       </div>
