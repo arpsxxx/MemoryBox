@@ -108,16 +108,16 @@
               <path d="M32 40V24m0 0-8 8m8-8 8 8"/>
               <path d="M20 44h24"/>
             </svg>
-            <p class="drop-label">Drag &amp; drop an image here</p>
+            <p class="drop-label">Drag &amp; drop a photo, video, or audio file here</p>
             <p class="drop-hint">or <span class="drop-browse">browse files</span></p>
-            <p class="drop-formats">JPG, PNG, WEBP, GIF · max 10 MB</p>
+            <p class="drop-formats">JPG, PNG, WEBP, GIF, MP4, WEBM, MP3, WAV · max 25 MB</p>
           </div>
           <div class="drop-zone-preview" id="dropPreview">
             <img id="previewImg" alt="Selected image preview" class="preview-img" />
             <button type="button" class="preview-remove" id="previewRemove" aria-label="Remove image">&#10005;</button>
             <p class="preview-name" id="previewName"></p>
           </div>
-          <input type="file" id="imageFile" accept="image/*" class="drop-input" aria-hidden="true" tabindex="-1" />
+          <input type="file" id="imageFile" accept="image/*,video/*,audio/*" class="drop-input" aria-hidden="true" tabindex="-1" />
         </div>
 
         <div class="form-grid">

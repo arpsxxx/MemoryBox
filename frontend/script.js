@@ -58,6 +58,14 @@ let allMemories = [];
 let pendingDeleteId = null;
 let selectedFile = null;
 
+function getMediaType(fileOrMemory) {
+  const type = fileOrMemory?.type || fileOrMemory?.contentType || "";
+
+  if (type.startsWith("video/")) return "video";
+  if (type.startsWith("audio/")) return "audio";
+  return "image";
+}
+
 /* ════════════════════════════════════════════════════════════
    THEME
    ════════════════════════════════════════════════════════════ */
@@ -121,26 +129,75 @@ navBtns.forEach(btn => {
    ════════════════════════════════════════════════════════════ */
 function setFile(file) {
   if (!file) return;
+
+  const mediaType = getMediaType(file);
+
+  if (!["image", "video", "audio"].includes(mediaType)) {
+    showToast("Unsupported file type. Please choose image, video, or audio.", "error");
+    return;
+  }
+
   selectedFile = file;
 
-  const reader = new FileReader();
-  reader.onload = e => {
-    previewImg.src = e.target.result;
-    previewName.textContent = file.name;
-    dropIdle.style.display = "none";
-    dropPreview.classList.add("visible");
-  };
-  reader.onerror = () => showToast("Could not read file.", "error");
-  reader.readAsDataURL(file);
+  const objectUrl = URL.createObjectURL(file);
+
+  let previewElement = "";
+
+  if (mediaType === "image") {
+    previewElement = `<img id="previewImg" src="${objectUrl}" alt="Preview" class="preview-img" />`;
+  }
+
+  if (mediaType === "video") {
+    previewElement = `
+      <video id="previewImg" class="preview-img" controls muted>
+        <source src="${objectUrl}" type="${file.type}">
+      </video>
+    `;
+  }
+
+  if (mediaType === "audio") {
+    previewElement = `
+      <div id="previewImg" class="preview-img audio-preview-box">
+        <span class="audio-preview-icon">♪</span>
+        <audio controls>
+          <source src="${objectUrl}" type="${file.type}">
+        </audio>
+      </div>
+    `;
+  }
+
+  dropPreview.innerHTML = `
+    ${previewElement}
+    <button type="button" class="preview-remove" id="previewRemove" aria-label="Remove file">&#10005;</button>
+    <p class="preview-name" id="previewName">${file.name}</p>
+  `;
+
+  dropIdle.style.display = "none";
+  dropPreview.classList.add("visible");
+
+  document.getElementById("previewRemove").addEventListener("click", e => {
+    e.stopPropagation();
+    clearFile();
+  });
 }
 
 function clearFile() {
   selectedFile = null;
   imageFileInput.value = "";
-  previewImg.src = "";
-  previewName.textContent = "";
+
+  dropPreview.innerHTML = `
+    <img id="previewImg" alt="Preview" class="preview-img" />
+    <button type="button" class="preview-remove" id="previewRemove" aria-label="Remove file">&#10005;</button>
+    <p class="preview-name" id="previewName"></p>
+  `;
+
   dropIdle.style.display = "";
   dropPreview.classList.remove("visible");
+
+  document.getElementById("previewRemove").addEventListener("click", e => {
+    e.stopPropagation();
+    clearFile();
+  });
 }
 
 imageFileInput.addEventListener("change", e => {
@@ -168,14 +225,19 @@ previewRemove.addEventListener("click", e => {
 
 dropZone.addEventListener("drop", e => {
   const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith("image/")) {
+  if (
+  file &&
+  (file.type.startsWith("image/") ||
+   file.type.startsWith("video/") ||
+   file.type.startsWith("audio/"))
+) {
     setFile(file);
     // Sync the file input (best effort for form submission flow)
     const dt = new DataTransfer();
     dt.items.add(file);
     imageFileInput.files = dt.files;
   } else if (file) {
-    showToast("Please drop an image file.", "error");
+    showToast("Please drop an image, video, or audio file.", "error");
   }
 });
 
@@ -229,7 +291,7 @@ async function uploadMemory(event) {
   const imageFile = selectedFile || imageFileInput.files[0];
 
   if (!imageFile) {
-    showToast("Please select or drop an image.", "error");
+    showToast("Please select or drop an image, video, or audio file.", "error");
     return;
   }
   if (!title) { showToast("Please enter a title.", "error"); return; }
@@ -240,15 +302,15 @@ async function uploadMemory(event) {
   try {
     const fileBase64 = await fileToBase64(imageFile);
 
-    const payload = {
-      title,
-      description,
-      tags: tagsInput.split(",").map(t => t.trim()).filter(Boolean),
-      fileName: imageFile.name,
-      contentType: imageFile.type,
-      fileBase64
-    };
-
+     const payload = {
+    title,
+   description,
+    tags: tagsInput.split(",").map(t => t.trim()).filter(Boolean),
+    fileName: imageFile.name,
+    contentType: imageFile.type,
+    mediaType: getMediaType(imageFile),
+    fileBase64
+  };
     const response = await fetch(`${API_BASE_URL}/memories`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -379,7 +441,26 @@ function renderMemories(memories) {
     return `
       <article class="memory-card" role="listitem" data-id="${escapeHtml(m.memoryId)}">
         <div class="card-img-wrap" data-src="${escapeHtml(m.blobUrl)}" data-alt="${escapeHtml(m.title)}">
-          <img src="${escapeHtml(m.blobUrl)}" alt="${escapeHtml(m.title)}" loading="lazy" />
+          ${
+  m.contentType?.startsWith("video/")
+    ? `
+      <video class="memory-video" controls preload="metadata">
+        <source src="${escapeHtml(m.blobUrl)}" type="${escapeHtml(m.contentType)}">
+      </video>
+    `
+    : m.contentType?.startsWith("audio/")
+    ? `
+      <div class="memory-audio">
+        <div class="audio-icon">♪</div>
+        <audio controls>
+          <source src="${escapeHtml(m.blobUrl)}" type="${escapeHtml(m.contentType)}">
+        </audio>
+      </div>
+    `
+    : `
+      <img src="${escapeHtml(m.blobUrl)}" alt="${escapeHtml(m.title)}" loading="lazy" />
+    `
+}
           <div class="card-img-overlay">
             <span class="card-date-overlay">${date}</span>
           </div>
