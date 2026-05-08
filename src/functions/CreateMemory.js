@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require("uuid");
 const { uploadImageToBlob } = require("../../shared/blob");
 const { createMemoryDocument } = require("../../shared/cosmos");
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
 function jsonResponse(status, body) {
   return {
@@ -19,6 +19,12 @@ function getFileExtension(fileName) {
   const parts = fileName.split(".");
   if (parts.length < 2) return "";
   return parts.pop().toLowerCase();
+}
+
+function getMediaType(contentType) {
+  if (contentType.startsWith("video/")) return "video";
+  if (contentType.startsWith("audio/")) return "audio";
+  return "image";
 }
 
 function validateCreateMemoryRequest(body) {
@@ -48,8 +54,13 @@ function validateCreateMemoryRequest(body) {
     errors.push("fileBase64 is required and must be a base64 string.");
   }
 
-  if (body.contentType && !body.contentType.startsWith("image/")) {
-    errors.push("Only image uploads are supported in this implementation.");
+  const allowedTypes = ["image/", "video/", "audio/"];
+
+  if (
+    body.contentType &&
+    !allowedTypes.some((type) => body.contentType.startsWith(type))
+  ) {
+    errors.push("Only image, video, or audio uploads are supported.");
   }
 
   return errors;
@@ -75,15 +86,17 @@ app.http("CreateMemory", {
 
       if (fileBuffer.length > MAX_FILE_SIZE_BYTES) {
         return jsonResponse(413, {
-          message: "File is too large. Maximum allowed size is 10MB."
+          message: "File is too large. Maximum allowed size is 25MB."
         });
       }
 
       const memoryId = uuidv4();
       const uploadedAt = new Date().toISOString();
-      const extension = getFileExtension(body.fileName) || "jpg";
+      const extension = getFileExtension(body.fileName) || "bin";
       const safeFileName = `${memoryId}.${extension}`;
-      const blobName = `images/demo-user/${safeFileName}`;
+
+      const mediaType = getMediaType(body.contentType);
+      const blobName = `${mediaType}s/demo-user/${safeFileName}`;
 
       const { blobUrl, blobPath } = await uploadImageToBlob({
         blobName,
@@ -100,7 +113,7 @@ app.http("CreateMemory", {
         tags: body.tags.map((tag) => String(tag).trim()).filter(Boolean),
         fileName: body.fileName,
         contentType: body.contentType,
-        mediaType: "image",
+        mediaType,
         blobUrl,
         blobPath,
         fileSizeBytes: fileBuffer.length,
@@ -109,7 +122,7 @@ app.http("CreateMemory", {
 
       const createdMemory = await createMemoryDocument(memory);
 
-      context.log(`Created memory ${memoryId}`);
+      context.log(`Created ${mediaType} memory ${memoryId}`);
 
       return jsonResponse(201, createdMemory);
     } catch (error) {

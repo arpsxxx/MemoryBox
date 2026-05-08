@@ -440,7 +440,7 @@ function renderMemories(memories) {
 
     return `
       <article class="memory-card" role="listitem" data-id="${escapeHtml(m.memoryId)}">
-        <div class="card-img-wrap" data-src="${escapeHtml(m.blobUrl)}" data-alt="${escapeHtml(m.title)}">
+        <div class="card-img-wrap" data-src="${escapeHtml(m.blobUrl)}" data-alt="${escapeHtml(m.title)}" data-media-type="${escapeHtml(m.mediaType || getMediaType(m))}">
           ${
   m.contentType?.startsWith("video/")
     ? `
@@ -486,10 +486,10 @@ function renderMemories(memories) {
 gallery.addEventListener("click", e => {
   // Image lightbox
   const imgWrap = e.target.closest(".card-img-wrap");
-  if (imgWrap && !e.target.closest("button")) {
-    openLightbox(imgWrap.dataset.src, imgWrap.dataset.alt);
-    return;
-  }
+if (imgWrap && !e.target.closest("button") && imgWrap.dataset.mediaType === "image") {
+  openLightbox(imgWrap.dataset.src, imgWrap.dataset.alt);
+  return;
+}
 
   // Action buttons
   const btn = e.target.closest("[data-action]");
